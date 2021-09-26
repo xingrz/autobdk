@@ -19,6 +19,7 @@
   "homepage": "https://github.com/xingrz/autobdk#readme",
   "dependencies": {
     "chalk": "^4.1.2",
+    "cli-table3": "^0.6.0",
     "got": "^11.8.2",
     "luxon": "^2.0.2"
   },

@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import * as Table from 'cli-table3';
 import * as chalk from 'chalk';
 
 import {
@@ -23,6 +24,12 @@ const HOUR_END = 19;
 
   const [cookie, yearmo] = args;
 
+  console.log('1. 正在获取数据…');
+  const table = new Table({
+    head: ['日期', '上班', '下班'],
+    colWidths: [10, 30, 30],
+  });
+
   const { records } = await getAttendanceRecordList(cookie, yearmo);
   for (const record of records) {
     if (record.situation != IAttendanceRecordSituation.WARNING) {
@@ -30,7 +37,6 @@ const HOUR_END = 19;
     }
 
     const time = DateTime.fromSeconds(record.time);
-    console.log(`+ ${time.toFormat('yyyy-LL-dd')}`);
 
     let timeBegin: IAttendanceRecord['signTimeList'][0] | null = null;
     let timeEnd: IAttendanceRecord['signTimeList'][0] | null = null;
@@ -57,25 +63,25 @@ const HOUR_END = 19;
       }
     }
 
-    if (bdkBegin) {
-      console.log(`  上班: ${chalk.yellow(bdkBegin)}（补签）`);
-    } else if (!timeBegin || !timeBegin.clockTime) {
-      console.log(`  上班: ${chalk.white.bgRed('缺 卡')}`);
-    } else if (timeBegin.statusDesc) {
-      console.log(`  上班: ${chalk.white.bgRed(timeBegin.clockTime)} ${timeBegin.statusDesc}`);
-    } else {
-      console.log(`  上班: ${chalk.green(timeBegin.clockTime)}`);
+    function getTimeString(record: IAttendanceRecord['signTimeList'][0] | null, bdk: string | null): string {
+      if (bdk) {
+        return `${chalk.yellow(bdk)} ${chalk.gray('补签')}`;
+      } else if (!record || !record.clockTime) {
+        return `${chalk.white.bgRed('缺 卡')}`;
+      } else if (record.statusDesc) {
+        return `${chalk.white.bgRed(record.clockTime)} ${chalk.white(record.statusDesc)}`;
+      } else {
+        return `${chalk.green(record.clockTime)}`;
+      }
     }
 
-    if (bdkEnd) {
-      console.log(`  下班: ${chalk.yellow(bdkEnd)}（补签）`);
-    } else if (!timeEnd || !timeEnd.clockTime) {
-      console.log(`  下班: ${chalk.white.bgRed('缺 卡')}`);
-    } else if (timeEnd.statusDesc) {
-      console.log(`  下班: ${chalk.white.bgRed(timeEnd.clockTime)} ${timeEnd.statusDesc}`);
-    } else {
-      console.log(`  下班: ${chalk.green(timeEnd.clockTime)}`);
-    }
+    table.push([
+      chalk.white.bold(time.toFormat('LL-dd')),
+      getTimeString(timeBegin, bdkBegin),
+      getTimeString(timeEnd, bdkEnd),
+    ]);
   }
+
+  console.log(table.toString());
 
 })();
