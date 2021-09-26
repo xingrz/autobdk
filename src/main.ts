@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
-import * as Table from 'cli-table3';
-import * as chalk from 'chalk';
+import Table from 'cli-table3';
+import chalk from 'chalk';
 
 import {
   IAttendanceRecordSituation,
