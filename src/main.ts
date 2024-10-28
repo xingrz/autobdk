@@ -150,8 +150,9 @@ const HOUR_END = 19;
       bdkDate: app.time.toFormat('yyyy-LL-dd'),
       clockType: app.clockType,
     };
-    await startAttendanceApproval(cookie, request);
-    console.log(`   * ${IAttendanceClockType[app.clockType]}: ${app.time.toFormat('LL-dd HH:mm')}`);
+    const result = await startAttendanceApproval(cookie, request);
+    const resultText = result ? chalk.red(result) : chalk.green('成功');
+    console.log(`   * ${IAttendanceClockType[app.clockType]}: ${app.time.toFormat('LL-dd HH:mm')} ... ${resultText}`);
   }
   console.log('');
 

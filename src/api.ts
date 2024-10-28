@@ -154,7 +154,7 @@ export interface IAttendanceApproval {
 // data: {"flow_type":6,"flowSettingId":2880415,"departmentId":"5aeccaaec68a4dcc91029f1d84621319","isClocking":0,"date":"1630425600","start_date":"2021-09-01 10:00","reason":"","image_path":"","timeRangeId":"2027489","bdkDate":"2021-09-01","clockType":1,"rangeModels":[],"custom_field":"[]"}
 // data: {"flow_type":6,"flowSettingId":2880415,"departmentId":"5aeccaaec68a4dcc91029f1d84621319","isClocking":0,"date":"1630857600","start_date":"2021-09-06 19:00","reason":"","image_path":"","timeRangeId":"2027489","bdkDate":"2021-09-06","clockType":2,"rangeModels":[],"custom_field":"[]"}
 
-export async function startAttendanceApproval(cookie: string, approval: IAttendanceApproval): Promise<void> {
+export async function startAttendanceApproval(cookie: string, approval: IAttendanceApproval): Promise<string | undefined> {
   const data = JSON.stringify({
     flow_type: approval.flow_type,
     flowSettingId: approval.flowSettingId,
@@ -170,12 +170,13 @@ export async function startAttendanceApproval(cookie: string, approval: IAttenda
     rangeModels: [],
     custom_field: "[]"
   });
-  await http.post(`${XRXS_URL}/attendance/ajax-start-attendance-approval`, {
+  const { status, message } = await http.post(`${XRXS_URL}/attendance/ajax-start-attendance-approval`, {
     headers: {
       Cookie: cookie,
     },
     form: {
       data,
     },
-  }).json();
+  }).json() as IEnvelope<{}>;
+  return status ? undefined : message;
 }
