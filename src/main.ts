@@ -2,6 +2,7 @@ import { DateTime, DateObjectUnits } from 'luxon';
 import Table from 'cli-table3';
 import chalk from 'chalk';
 import pressAnyKey from 'press-any-key';
+import { setTimeout } from 'timers/promises';
 
 import {
   IAttendanceRecordSituation,
@@ -150,9 +151,15 @@ const HOUR_END = 19;
       bdkDate: app.time.toFormat('yyyy-LL-dd'),
       clockType: app.clockType,
     };
-    const result = await startAttendanceApproval(cookie, request);
-    const resultText = result ? chalk.red(result) : chalk.green('成功');
-    console.log(`   * ${IAttendanceClockType[app.clockType]}: ${app.time.toFormat('LL-dd HH:mm')} ... ${resultText}`);
+    for (let i = 0; i < 5; i++) {
+      const result = await startAttendanceApproval(cookie, request);
+      const resultText = result ? chalk.red(result) : chalk.green('成功');
+      console.log(`   * ${IAttendanceClockType[app.clockType]}: ${app.time.toFormat('LL-dd HH:mm')} ... ${resultText}`);
+      if (!result?.includes('重复提交')) {
+        break;
+      }
+    }
+    await setTimeout(10 * 1000);
   }
   console.log('');
 
