@@ -14,6 +14,7 @@ import {
   getApproveBdkFlow,
   newSignAgain,
   startAttendanceApproval,
+  common,
 } from './api';
 
 const HOUR_START = 10;
@@ -30,6 +31,17 @@ const HOUR_END = 19;
 
   const [cookie, yearmo] = args;
 
+  const { companyName, employeeName, csrf } = await common(cookie);
+  console.log(`公司: ${companyName}`);
+  console.log(`姓名: ${employeeName}`);
+  console.log(`CSRF Token: ${csrf}`);
+  console.log('');
+
+  const cred = {
+    'Cookie': cookie,
+    'X-CSRF-TOKEN': csrf,
+  };
+
   console.log('1. 正在获取数据…');
   const table = new Table({
     head: ['日期', '上班', '下班'],
@@ -42,7 +54,7 @@ const HOUR_END = 19;
     rangeId: string;
   }[] = [];
 
-  const { records } = await getAttendanceRecordList(cookie, yearmo);
+  const { records } = await getAttendanceRecordList(cred, yearmo);
   for (const record of records) {
     if (record.situation != IAttendanceRecordSituation.WARNING) {
       continue;
@@ -53,7 +65,7 @@ const HOUR_END = 19;
     let timeBegin: IAttendanceRecord['signTimeList'][0] | null = null;
     let timeEnd: IAttendanceRecord['signTimeList'][0] | null = null;
 
-    const { signTimeList } = await getAttendanceRecordByDate(cookie, time.toFormat('yyyyLLdd'));
+    const { signTimeList } = await getAttendanceRecordByDate(cred, time.toFormat('yyyyLLdd'));
     for (const signTime of signTimeList) {
       if (signTime.rangeName == '上班') {
         timeBegin = signTime;
@@ -65,7 +77,7 @@ const HOUR_END = 19;
     let bdkBegin: string | null = null;
     let bdkEnd: string | null = null;
 
-    const approves = await getApproveBdkFlow(cookie, `${record.time}`);
+    const approves = await getApproveBdkFlow(cred, `${record.time}`);
     for (const approve of approves) {
       const time = DateTime.fromSeconds(approve.startDate);
       if (time.hour <= HOUR_START) {
@@ -139,7 +151,7 @@ const HOUR_END = 19;
   await pressAnyKey('按任意键继续…');
 
   console.log('3. 正在补签…');
-  const sign = await newSignAgain(cookie);
+  const sign = await newSignAgain(cred);
   for (const app of approving) {
     const request: IAttendanceApproval = {
       flow_type: sign.flow_type,
@@ -152,7 +164,7 @@ const HOUR_END = 19;
       clockType: app.clockType,
     };
     for (let i = 0; i < 5; i++) {
-      const result = await startAttendanceApproval(cookie, request);
+      const result = await startAttendanceApproval(cred, request);
       const resultText = result ? chalk.red(result) : chalk.green('成功');
       console.log(`   * ${IAttendanceClockType[app.clockType]}: ${app.time.toFormat('LL-dd HH:mm')} ... ${resultText}`);
       if (!result?.includes('重复提交')) {
